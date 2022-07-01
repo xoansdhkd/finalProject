@@ -34,15 +34,4 @@ public class AccountsController {
         return accountsService.changePassword(accountsRequestDto);
     }
 
-    // TEST
-    @PostMapping("/main")
-    public ResponseEntity<Message> main(@AuthenticationPrincipal EmployeeDetails user) {
-        System.out.println(user.getEmployee().getNo());
-        return accountsService.main();
-    }
-
-    @PostMapping("/admin")
-    public ResponseEntity<Message> admin() {
-        return accountsService.admin();
-    }
 }

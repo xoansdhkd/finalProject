@@ -17,6 +17,8 @@ import java.util.List;
 @NoArgsConstructor
 public class UserReservationDto {
 
+    private Long reservNo;
+
     private String able;
     private Long resourceNo;
     private Long userNo;
@@ -26,7 +28,8 @@ public class UserReservationDto {
     private List<String> peopleCnt;
 
     @Builder
-    public  UserReservationDto(Long resourceNo, Long userNo, String reservName, Date startTime, Date endTime, String[] peopleCnt) {
+    public  UserReservationDto(Long reservNo, Long resourceNo, Long userNo, String reservName, Date startTime, Date endTime, String[] peopleCnt) {
+        this.reservNo = reservNo;
         this.resourceNo = resourceNo;
         this.userNo = userNo;
         this.reservName = reservName;
@@ -39,7 +42,8 @@ public class UserReservationDto {
     }
 
     @Builder
-    public  UserReservationDto(Long resourceNo, Long userNo, String reservName, Date startTime, Date endTime) {
+    public  UserReservationDto(Long reservNo, Long resourceNo, Long userNo, String reservName, Date startTime, Date endTime) {
+        this.reservNo = reservNo;
         this.resourceNo = resourceNo;
         this.userNo = userNo;
         this.reservName = reservName;

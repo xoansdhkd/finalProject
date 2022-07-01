@@ -1,7 +1,10 @@
 package com.team2.backend.service.user;
 
 import com.team2.backend.domain.reservation.*;
+import com.team2.backend.domain.resource.CategoryRepository;
+import com.team2.backend.domain.resource.ResourceRepository;
 import com.team2.backend.web.dto.SocketMessage;
+import com.team2.backend.web.dto.user.UserReservationDto;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.client.utils.DateUtils;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -18,10 +21,13 @@ import java.util.*;
 @Service
 public class SocketService {
     private static final SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+    private static final SimpleDateFormat fullFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
     private final SimpMessagingTemplate simpMessagingTemplate;
     private final ReservationRepository reservationRepository;
     private final ReservationCheckRepository reservationCheckRepository;
     private final TimelistRepository timelistRepository;
+    private final ResourceRepository resourceRepository;
 
     @Transactional
     public SocketMessage getTimelist(SocketMessage message) throws ParseException {
@@ -35,16 +41,17 @@ public class SocketService {
             dateList.add(i);
         }
 
-        HashMap<String, Integer[]> timelists = new HashMap<>();
-
+        HashMap<String, Long[]> timelists = new HashMap<>();
         for (int i = 0; i < dateList.size(); i++) {
-            ReservationCheck check = reservationCheckRepository.findByResourceNoAndCheckDate(resourceNo, formatter.format(dateList.get(i)));
-            if (check == null) {
+            List<ReservationCheck> check = reservationCheckRepository.findByResourceNoAndCheckDate(resourceNo, formatter.format(dateList.get(i)));
+            if (check.isEmpty()) {
                 continue;
             }
             else {
-                Integer[] timelist =  timelistRepository.findAllByCheckNo(check.getCheckNo());
-                timelists.put(formatter.format(dateList.get(i)), timelist);
+                for (int j = 0; j < check.size(); j++) {
+                    Long[] timelist =  timelistRepository.findAllByCheckNo(check.get(j).getCheckNo());
+                    timelists.put(formatter.format(dateList.get(i)), timelist);
+                }
             }
         }
 
@@ -66,6 +73,7 @@ public class SocketService {
     @Transactional(rollbackFor = {RuntimeException.class, Exception.class})
     public SocketMessage checkReservation(SocketMessage message) throws ParseException {
         HashMap<String, String> data = (HashMap<String, String>) message.getData();
+        Long userNo = Long.parseLong(data.get("userNo"));
         Long resourceNo = Long.parseLong(data.get("resourceNo"));
         String startDate = data.get("startTime").split(" ")[0];
         String endDate = data.get("endTime").split(" ")[0];
@@ -73,19 +81,31 @@ public class SocketService {
         Date to = formatter.parse(endDate);
         Integer startTime = timeParser(data.get("startTime").split(" ")[1]);
         Integer endTime = timeParser(data.get("endTime").split(" ")[1]);
+        Long cateNo = resourceRepository.findCateNoByResourceNo(resourceNo);
 
         List<Date> dateList = new ArrayList<>();
-        for (Date i = from; i.before(to) || i.equals(endDate); i = new Date(i.getTime() + (1000 * 60 * 60 * 24))) {
+        for (Date i = from; i.before(to) || i.equals(to); i = new Date(i.getTime() + (1000 * 60 * 60 * 24))) {
             dateList.add(i);
         }
 
         switch (isAvailable(resourceNo, startDate, startTime, endDate, endTime)) {
-            case "NEW":
+            case "OK":
+                System.out.println("OK");
+                Reservation newReserv = reservationRepository.save(
+                        Reservation.builder()
+                                .resourceNo(resourceNo)
+                                .userNo(userNo)
+                                .startTime(fullFormatter.parse(data.get("startTime")))
+                                .endTime(fullFormatter.parse(data.get("endTime")))
+                                .build()
+                );
                 for (int i = 0; i < dateList.size(); i++) {
                     ReservationCheck newCheck = reservationCheckRepository.save(
                             ReservationCheck.builder()
                                     .resourceNo(resourceNo)
                                     .checkDate(formatter.format(dateList.get(i)))
+                                    .cateNo(cateNo)
+                                    .reservNo(newReserv.getReservNo())
                                     .build()
                     );
                     if (dateList.size() > 1) {
@@ -103,32 +123,41 @@ public class SocketService {
                         saveTimelist(newCheck.getCheckNo(), startTime, endTime);
                     }
                 }
-                System.out.println("NEW");
                 message.setResCode(4000);
                 message.setMessage("[SUCCESS] 시간 저장 완료");
                 break;
-            case "OK":
-                for (int i = 0; i < dateList.size(); i++) {
-                    ReservationCheck findCheck = reservationCheckRepository.findByResourceNoAndCheckDate(resourceNo, formatter.format(dateList.get(i)));
-                    if (dateList.size() > 1) {
-                        if (i == 0) {
-                            saveTimelist(findCheck.getCheckNo(), startTime, 48);
-                        }
-                        else if (i == dateList.size() - 1) {
-                            saveTimelist(findCheck.getCheckNo(), 0, endTime);
-                        }
-                        else {
-                            saveTimelist(findCheck.getCheckNo(), 0, 48);
-                        }
-                    }
-                    else  {
-                        saveTimelist(findCheck.getCheckNo(), startTime, endTime);
-                    }
-                }
-                System.out.println("OK");
-                message.setResCode(4000);
-                message.setMessage("[SUCCESS] 시간 저장 완료");
-                break;
+//            case "OK":
+//                System.out.println("OK");
+//                Reservation okReserv = reservationRepository.save(
+//                        Reservation.builder()
+//                                .resourceNo(resourceNo)
+//                                .userNo(userNo)
+//                                .startTime(fullFormatter.parse(data.get("startTime")))
+//                                .endTime(fullFormatter.parse(data.get("endTime")))
+//                                .build()
+//                );
+//
+//                for (int i = 0; i < dateList.size(); i++) {
+//                    ReservationCheck findCheck = reservationCheckRepository
+//                            .findByReservNoAndCheckDate(okReserv.getReservNo(), formatter.format(dateList.get(i)));
+//                    if (dateList.size() > 1) {
+//                        if (i == 0) {
+//                            saveTimelist(findCheck.getCheckNo(), startTime, 48);
+//                        }
+//                        else if (i == dateList.size() - 1) {
+//                            saveTimelist(findCheck.getCheckNo(), 0, endTime);
+//                        }
+//                        else {
+//                            saveTimelist(findCheck.getCheckNo(), 0, 48);
+//                        }
+//                    }
+//                    else  {
+//                        saveTimelist(findCheck.getCheckNo(), startTime, endTime);
+//                    }
+//                }
+//                message.setResCode(4000);
+//                message.setMessage("[SUCCESS] 시간 저장 완료");
+//                break;
             case "FAIL":
                 // 시간 리스트 다시 보내줄까?
                 System.out.println("FAIL");
@@ -147,33 +176,28 @@ public class SocketService {
 
     @Transactional(rollbackFor = {RuntimeException.class, Exception.class})
     public String isAvailable(Long resourceNo, String startDate , Integer startTime, String endDate, Integer endTime) throws ParseException {
-        
+
+        List<ReservationCheck> checklist = null;
+
         // 당일 예약이라면
         if (startDate.equals(endDate)) {
-            ReservationCheck check = reservationCheckRepository.findByResourceNoAndCheckDate(resourceNo, startDate);
-            if (check == null) {
-                return "NEW";
-            }
-            List<Timelist> timelist = check.getTimelist();
-            for (int i = 0; i < timelist.size(); i++) {
-                Integer timeNo = timelist.get(i).getTimeNo();
-                if (timeNo >= startTime && timeNo < endTime) {
-                    return "FAIL";
-                }
-            }
-            return "OK";
+            checklist = reservationCheckRepository
+                    .findAllByResourceNoAndCheckDate(resourceNo, startDate);
         }
         else { // 여러 날짜 예약이라면
-            List<ReservationCheck> checklist = reservationCheckRepository.findAllByResourceNoAndCheckDateBetween(resourceNo, startDate, endDate);
-            if (checklist.isEmpty()) {
-                return "NEW";
-            }
+            checklist = reservationCheckRepository
+                    .findAllByResourceNoAndCheckDateBetween(resourceNo, startDate, endDate);
+        }
 
+        if (checklist.isEmpty()) {
+            return "OK";
+        }
+        else {
             for (int i = 0; i < checklist.size(); i++) {
                 ReservationCheck check = checklist.get(i);
                 List<Timelist> timelist = check.getTimelist();
                 for (int j = 0; j < timelist.size(); j++) {
-                    Integer timeNo = timelist.get(j).getTimeNo();
+                    Long timeNo = timelist.get(j).getTimeNo();
                     if (timeNo >= startTime && timeNo < endTime) {
                         return "FAIL";
                     }
@@ -228,13 +252,25 @@ public class SocketService {
 
     @Transactional
     public void saveTimelist(Long checkNo, Integer startTime, Integer endTime) {
-        for (int j = startTime; j < endTime; j++) {
+        for (Integer j = startTime; j < endTime; j++) {
             timelistRepository.save(
                     Timelist.builder()
                             .checkNo(checkNo)
-                            .timeNo(j)
+                            .timeNo(new Long(j))
                             .build()
             );
         }
     }
+
+//    @Transactional
+//    public Reservation saveReservation(Long ) {
+//        return reservationRepository.save(
+//                Reservation.builder()
+//                        .resourceNo(resourceNo)
+//                        .userNo(userNo)
+//                        .startTime(fullFormatter.parse(data.get("startTime")))
+//                        .endTime(fullFormatter.parse(data.get("endTime")))
+//                        .build()
+//        );
+//    }
 }

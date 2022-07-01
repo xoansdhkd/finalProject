@@ -69,7 +69,6 @@ public class LoginFilter extends UsernamePasswordAuthenticationFilter {
         System.out.println("[SUCCESS] Verify Access Token");
 
         String userId = ((EmployeeDetails) authResult.getPrincipal()).getEmployee().getUserId();
-        System.out.println(userId);
 
         Long userNo = ((EmployeeDetails) authResult.getPrincipal()).getEmployee().getNo();
         String name = ((EmployeeDetails) authResult.getPrincipal()).getEmployee().getName();

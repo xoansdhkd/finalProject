@@ -31,14 +31,13 @@ public class Timelist {
     private Long listNo;
 
     @Column(name="timeNo")
-    private Integer timeNo;
+    private Long timeNo;
 
     // 필요없을지도?
-    @ManyToOne(targetEntity = ReservationCheck.class)
+    @ManyToOne(targetEntity = ReservationCheck.class, cascade = CascadeType.REMOVE)
     @JoinColumn(name="checkNo", insertable = false, updatable = false)
     @JsonIgnore
     private ReservationCheck check;
     @Column(name="checkNo")
-    @JsonIgnore
     private Long checkNo;
 }

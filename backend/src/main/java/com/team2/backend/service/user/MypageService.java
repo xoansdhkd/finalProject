@@ -1,6 +1,8 @@
 package com.team2.backend.service.user;
 
 import com.team2.backend.config.security.auth.EmployeeDetails;
+import com.team2.backend.domain.bookmark.Bookmark;
+import com.team2.backend.domain.bookmark.BookmarkRepository;
 import com.team2.backend.domain.user.Employee;
 import com.team2.backend.domain.user.EmployeeQuerydslRepository;
 import com.team2.backend.domain.user.EmployeeRepository;
@@ -9,6 +11,7 @@ import com.team2.backend.web.dto.Message;
 import com.team2.backend.web.dto.admin.EmployeeManagementDto;
 import com.team2.backend.web.dto.user.MypageDto;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -25,6 +28,7 @@ public class MypageService {
     private final EmployeeRepository employeeRepository;
     private final EmployeeQuerydslRepository employeeQuerydslRepository;
     private final BCryptPasswordEncoder bCryptPasswordEncoder;
+    private final BookmarkRepository bookmarkRepository;
 
 
     @Transactional
@@ -66,6 +70,19 @@ public class MypageService {
                 .resCode(2000)
                 .message("[SUCCESS] Select Employee View")
                 .data(employee)
+                .build();
+        return new JsonResponse().send(200, message);
+    }
+
+    @Transactional
+    public ResponseEntity<Message> getBookmark(EmployeeDetails user) {
+
+        List<Bookmark> bookmarkList = bookmarkRepository.findAllByUserNo(user.getEmployee().getNo());
+
+        Message message = Message.builder()
+                .resCode(4000)
+                .message("[SUCCESS] Get my Bookmark")
+                .data(bookmarkList)
                 .build();
         return new JsonResponse().send(200, message);
     }

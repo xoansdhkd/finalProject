@@ -38,7 +38,6 @@ public class AuthCheckFilter extends BasicAuthenticationFilter {
         String header = jwtTokenProvider.getAccessTokenFromHeader(request);
 
         if (header == null || !header.startsWith("Bearer%")) {
-            System.out.println("[ERROR] Invalid Token");
             chain.doFilter(request, response);
             return;
         }

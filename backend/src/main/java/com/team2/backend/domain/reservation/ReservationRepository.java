@@ -10,7 +10,9 @@ import java.util.List;
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
     Reservation findByReservNo(Long reservNo);
-    List<Reservation> findAllByResourceNo(Long resourceNo); // 와 이거 어쩜
+    List<Reservation> findAllByResourceNo(Long resourceNo);
+
+    List<Reservation> findAllByUserNo(Long userNo);
 
     @Query(value = "select r.reservNo as reservNo, r.resourceNo as resourceNo, r.reservName as reservName, " +
             "r.startTime as startTime, r.endTime as endTime, " +

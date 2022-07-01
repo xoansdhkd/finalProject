@@ -52,10 +52,19 @@ public class ReservationCheck {
     @OneToMany(mappedBy = "checkNo")
     private List<Timelist> timelist;
 
-    @ManyToOne(targetEntity = Reservation.class)
+    @ManyToOne(targetEntity = Reservation.class, cascade = CascadeType.REMOVE)
     @JoinColumn(name="reservNo", insertable = false, updatable = false)
-    private Resource reserv;
+    @JsonIgnore
+    private Reservation reserv;
     @Column(name="reservNo")
     private Long reservNo;
+
+
+    @Builder
+    public ReservationCheck(Long resourceNo, String checkDate, Long reservNo) {
+        this.resourceNo = resourceNo;
+        this.checkDate = checkDate;
+        this.reservNo = reservNo;
+    }
 
 }

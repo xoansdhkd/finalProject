@@ -47,36 +47,24 @@ public class ReserveService {
     }
 
     @Transactional
-    public ResponseEntity<Message> reserveOffice(HttpServletRequest req, UserReservationDto body) {
+    public ResponseEntity<Message> myReservationList(EmployeeDetails user) {
+        List<Reservation> reservationList = reservationRepository.findAllByUserNo(user.getEmployee().getNo());
+        Message message = Message.builder()
+                .resCode(4000)
+                .message("[SUCCESS] Get my reservations")
+                .data(reservationList)
+                .build();
+        return new JsonResponse().send(200, message);
+    }
 
-        Reservation reservation = reservationRepository.save(
-                Reservation.builder()
-                        .resourceNo(body.getResourceNo())
-                        .userNo(body.getUserNo())
-                        .reservName(body.getReservName())
-                        .startTime(body.getStartTime())
-                        .endTime(body.getEndTime())
-                        .build()
-        );
+    @Transactional
+    public ResponseEntity<Message> cancelReservation(UserReservationDto body) {
 
-        List<String> peopleCnt = body.getPeopleCnt();
-
-        for (int i = 0; i < peopleCnt.size(); i++) {
-            peopleCntRepository.save(
-                    PeopleCnt.builder()
-                    .reservNo(reservation.getReservNo())
-                    .userNo(Long.parseLong(peopleCnt.get(i)))
-                    .build()
-            );
-        }
-
-        // Test
-        Reservation r = reservationRepository.findByReservNo(2L);
+        reservationRepository.delete(reservationRepository.findByReservNo(body.getReservNo()));
 
         Message message = Message.builder()
                 .resCode(4000)
-                .message("[SUCCESS] Save reservation")
-                .data(r)
+                .message("[SUCCESS] Cancel reservation")
                 .build();
         return new JsonResponse().send(200, message);
     }

@@ -1,10 +1,12 @@
 package com.team2.backend.web.controller.user;
 
+import com.team2.backend.config.security.auth.EmployeeDetails;
 import com.team2.backend.service.user.ReserveService;
 import com.team2.backend.web.dto.Message;
 import com.team2.backend.web.dto.user.UserReservationDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,10 +24,13 @@ public class ReserveController {
         return reserveService.getResourceList();
     }
 
-//    @PostMapping("/reserve/office")
-//    public ResponseEntity<Message> reserveOffice(HttpServletRequest req, @RequestBody UserReservationDto body) {
-//        return reserveService.reserveOffice(req, body);
-//    }
-//    @PostMapping("/reserve/car")
-//    @PostMapping("/reserve/laptop")
+    @PostMapping("/mylist")
+    public ResponseEntity<Message> mylist(@AuthenticationPrincipal EmployeeDetails user) {
+        return reserveService.myReservationList(user);
+    }
+
+    @PostMapping("/cancel")
+    public ResponseEntity<Message> reserveOffice(@RequestBody UserReservationDto body) {
+        return reserveService.cancelReservation(body);
+    }
 }

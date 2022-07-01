@@ -8,13 +8,14 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.security.Principal;
 import java.util.ArrayList;
 import java.util.Collection;
 
 @RequiredArgsConstructor
 @Getter
 @Setter
-public class EmployeeDetails implements UserDetails {
+public class EmployeeDetails implements UserDetails, Principal {
     private final Employee employee;
 
     @Override
@@ -57,5 +58,10 @@ public class EmployeeDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    @Override
+    public String getName() {
+        return employee.getUserId();
     }
 }

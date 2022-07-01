@@ -10,5 +10,5 @@ public interface TimelistRepository extends JpaRepository<Timelist, Long> {
 
     Timelist findByCheckNo(Long checkNo);
     @Query("SELECT timeNo FROM Timelist WHERE checkNo = :checkNo")
-    Integer[] findAllByCheckNo(@Param("checkNo")Long checkNo);
+    Long[] findAllByCheckNo(@Param("checkNo")Long checkNo);
 }

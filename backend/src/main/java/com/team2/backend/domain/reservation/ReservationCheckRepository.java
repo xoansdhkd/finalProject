@@ -9,6 +9,9 @@ import java.util.List;
 @Repository
 public interface ReservationCheckRepository extends JpaRepository<ReservationCheck, Long> {
 
-    ReservationCheck findByResourceNoAndCheckDate(Long resourceNo,String checkDate);
+    List<ReservationCheck> findByResourceNoAndCheckDate(Long resourceNo, String checkDate);
+    List<ReservationCheck> findAllByResourceNoAndCheckDate(Long resourceNo,String checkDate);
+    ReservationCheck findByReservNoAndCheckDate(Long reservNo, String checkDate);
     List<ReservationCheck> findAllByResourceNoAndCheckDateBetween(Long resourceNo, String startTime, String endTime);
+    List<ReservationCheck> findAllByResourceNoAndReservNoAndCheckDateBetween(Long resourceNo, Long reservNo , String startTime, String endTime);
 }

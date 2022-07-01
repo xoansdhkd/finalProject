@@ -30,4 +30,10 @@ public class MypageController {
     public ResponseEntity<Message> employeeView(HttpServletRequest request){
         return mypageService.employeeView(request);
     }
+
+    @PostMapping("/mypage/bookmark")
+    public ResponseEntity<Message> getBookmark(@AuthenticationPrincipal EmployeeDetails user){
+        return mypageService.getBookmark(user);
+    }
+
 }

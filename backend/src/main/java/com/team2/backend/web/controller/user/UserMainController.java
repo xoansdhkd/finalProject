@@ -1,12 +1,15 @@
 package com.team2.backend.web.controller.user;
 
 import com.amazonaws.services.medialive.model.Reservation;
+import com.team2.backend.config.security.auth.EmployeeDetails;
 import com.team2.backend.service.admin.ResourceService;
 import com.team2.backend.service.user.UserMainService;
 import com.team2.backend.web.dto.JsonResponse;
 import com.team2.backend.web.dto.Message;
+import com.team2.backend.web.dto.user.UserBookmarkDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,4 +42,15 @@ public class UserMainController {
     public ResponseEntity<Message> getEachList(@PathVariable Long cateNo){
         return resourceService.getEachList(cateNo);
     }
+
+    @PostMapping("/addbookmark")
+    public ResponseEntity<Message> addBookmark(@AuthenticationPrincipal EmployeeDetails user, @RequestBody UserBookmarkDto body){
+        return userMainService.addBookmark(user, body);
+    }
+
+    @PostMapping("/removebookmark")
+    public ResponseEntity<Message> removeBookmark(@AuthenticationPrincipal EmployeeDetails user, @RequestBody UserBookmarkDto body){
+        return userMainService.removeBookmark(user, body);
+    }
+
 }
